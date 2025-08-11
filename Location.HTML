@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Geolocation Demo</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        h1 {
+            color: #333;
+        }
+        button {
+            padding: 10px 15px;
+            margin: 5px;
+            border: none;
+            background-color: #007bff;
+            color: white;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        #status {
+            margin-top: 10px;
+            font-weight: bold;
+        }
+        .container {
+            display: flex;
+            gap: 20px;
+            margin-top: 20px;
+        }
+        .map-preview {
+            border: 1px solid #ccc;
+            padding: 10px;
+        }
+        iframe {
+            width: 300px;
+            height: 200px;
+            border: 0;
+        }
+        .notes {
+            font-size: 14px;
+            color: gray;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+
+<h1>Geolocation Demo</h1>
+<p>Get the device's latitude & longitude, accuracy and show it on a map.</p>
+
+<button id="getLocation">Get Current Location</button>
+<button id="startTracking">Start Tracking</button>
+<button id="stopTracking" disabled>Stop Tracking</button>
+<button id="copyCoordinates">Copy Coordinates</button>
+
+<p id="status">Status: tracking stopped</p>
+<div class="container">
+    <div>
+        <p><strong>Latitude:</strong> <span id="lat">-</span></p>
+        <p><strong>Longitude:</strong> <span id="lon">-</span></p>
+        <p><strong>Accuracy (meters):</strong> <span id="accuracy">-</span></p>
+        <p><strong>Timestamp:</strong> <span id="timestamp">-</span></p>
+        <p><a href="#" id="googleMapsLink" target="_blank">Open in Google Maps</a></p>
+    </div>
+    <div class="map-preview">
+        <iframe id="mapFrame" src=""></iframe>
+    </div>
+</div>
+
+<div class="notes">
+    <p>Notes:</p>
+    <ul>
+        <li>Geolocation requires user permission. Works only over <b>https</b> or <b>localhost</b>.</li>
+        <li>If permission is denied, you'll see an error message.</li>
+    </ul>
+</div>
+
+<script>
+    let watchId = null;
+
+    const latElem = document.getElementById("lat");
+    const lonElem = document.getElementById("lon");
+    const accElem = document.getElementById("accuracy");
+    const timeElem = document.getElementById("timestamp");
+    const mapFrame = document.getElementById("mapFrame");
+    const googleMapsLink = document.getElementById("googleMapsLink");
+    const statusElem = document.getElementById("status");
+
+    // Auto-load location when page opens
+    window.onload = () => {
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(showPosition, showError);
+        }
+    };
+
+    document.getElementById("getLocation").addEventListener("click", () => {
+        navigator.geolocation.getCurrentPosition(showPosition, showError);
+    });
+
+    document.getElementById("startTracking").addEventListener("click", () => {
+        watchId = navigator.geolocation.watchPosition(showPosition, showError);
+        statusElem.textContent = "Status: tracking started";
+        document.getElementById("stopTracking").disabled = false;
+    });
+
+    document.getElementById("stopTracking").addEventListener("click", () => {
+        navigator.geolocation.clearWatch(watchId);
+        statusElem.textContent = "Status: tracking stopped";
+        document.getElementById("stopTracking").disabled = true;
+    });
+
+    document.getElementById("copyCoordinates").addEventListener("click", () => {
+        const coords = `Latitude: ${latElem.textContent}, Longitude: ${lonElem.textContent}`;
+        navigator.clipboard.writeText(coords);
+        alert("Coordinates copied!");
+    });
+
+    function showPosition(position) {
+        const lat = position.coords.latitude;
+        const lon = position.coords.longitude;
+        const accuracy = position.coords.accuracy;
+        const timestamp = new Date(position.timestamp).toLocaleString();
+
+        latElem.textContent = lat;
+        lonElem.textContent = lon;
+        accElem.textContent = accuracy;
+        timeElem.textContent = timestamp;
+
+        const mapUrl = `https://www.google.com/maps?q=${lat},${lon}&output=embed`;
+        mapFrame.src = mapUrl;
+        googleMapsLink.href = `https://www.google.com/maps?q=${lat},${lon}`;
+    }
+
+    function showError(error) {
+        alert(`Error: ${error.message}`);
+    }
+</script>
+</body>
+</html>
